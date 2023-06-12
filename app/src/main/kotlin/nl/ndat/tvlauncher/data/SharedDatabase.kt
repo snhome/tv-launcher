@@ -23,7 +23,7 @@ import nl.ndat.tvlauncher.data.entity.Input
 		Channel::class,
 		ChannelProgram::class,
 		Input::class,
-	],
+	], exportSchema = false
 )
 abstract class SharedDatabase : RoomDatabase() {
 	companion object {
