@@ -5,6 +5,7 @@
 	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 	<uses-permission android:name="android.permission.READ_TV_LISTINGS" />
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
 	<uses-feature
 		android:name="android.software.leanback"
@@ -45,6 +46,10 @@
 				<category android:name="android.intent.category.MONKEY" />
 			</intent-filter>
 		</activity>
+
+		<activity
+			android:name=".BlankBlockingActivity"
+			android:exported="false" />
 
 		<receiver
 			android:name=".data.receiver.PackageChangeReceiver"

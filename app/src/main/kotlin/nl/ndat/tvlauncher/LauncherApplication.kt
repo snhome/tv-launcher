@@ -1,6 +1,10 @@
 package nl.ndat.tvlauncher
 
 import android.app.Application
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import androidx.core.content.ContextCompat
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.util.DebugLogger
@@ -19,6 +23,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 import org.koin.dsl.module
 import timber.log.Timber
+
 
 private val launcherModule = module {
 	single { DefaultLauncherHelper(get()) }
@@ -46,6 +51,15 @@ private val databaseModule = module {
 	single { get<SharedDatabase>().inputDao() }
 }
 
+class BootReceiver : BroadcastReceiver() {
+	override fun onReceive(context: Context, intent: Intent) {
+		if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+			val serviceIntent = Intent(context, MyForegroundService::class.java)
+			ContextCompat.startForegroundService(context, serviceIntent)
+		}
+	}
+}
+
 class LauncherApplication : Application(), ImageLoaderFactory {
 	override fun onCreate() {
 		super.onCreate()
@@ -58,6 +72,13 @@ class LauncherApplication : Application(), ImageLoaderFactory {
 
 			modules(launcherModule, databaseModule)
 		}
+
+		//start BootReceiver
+		val serviceIntent = Intent(this, MyForegroundService::class.java)
+		ContextCompat.startForegroundService(this, serviceIntent)
+
+
+
 	}
 
 	override fun newImageLoader()= ImageLoader.Builder(this)

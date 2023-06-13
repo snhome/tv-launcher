@@ -38,4 +38,5 @@ fun LauncherPage() {
 		item { AppCardRow() }
 		items(channels) { channel -> ChannelProgramCardRow(channel) }
 	}
+
 }

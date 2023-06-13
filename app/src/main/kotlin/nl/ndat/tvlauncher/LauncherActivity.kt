@@ -51,4 +51,5 @@ class LauncherActivity : ComponentActivity() {
 			if (intent != null) startActivityForResult(intent, 0)
 		}
 	}
+
 }
