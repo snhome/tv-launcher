@@ -57,4 +57,8 @@ dependencies {
 	implementation(libs.androidx.tv.foundation)
 	implementation(libs.androidx.tv.material)
 	implementation(libs.coil.compose)
+
+	//MQTT
+	implementation("androidx.legacy:legacy-support-v4:1.0.0")
+	implementation("com.github.hannesa2:paho.mqtt.android:3.5.2")
 }

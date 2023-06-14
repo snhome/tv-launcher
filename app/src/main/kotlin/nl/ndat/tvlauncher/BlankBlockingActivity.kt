@@ -11,6 +11,9 @@ class BlankBlockingActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
 		super.onCreate(savedInstanceState, persistentState)
 
+		// set the content view to a video layout
+		setContentView(R.layout.video_layout)
+
 		val builder = AlertDialog.Builder(this)
 		builder.setTitle("Title")
 		builder.setMessage("Message")
@@ -22,6 +25,11 @@ class BlankBlockingActivity : ComponentActivity() {
 		}
 		val dialog = builder.create()
 		dialog.show()
+
+		// play a video
+		// https://stackoverflow.com/questions/3028306/how-to-play-video-from-assets-folder-into-videoview
+
+
 	}
 
 }
