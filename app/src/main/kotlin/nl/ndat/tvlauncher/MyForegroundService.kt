@@ -12,8 +12,13 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import info.mqtt.android.service.MqttAndroidClient
+import org.eclipse.paho.client.mqttv3.IMqttActionListener
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
+import org.eclipse.paho.client.mqttv3.IMqttToken
 import org.eclipse.paho.client.mqttv3.MqttCallback
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions
+import org.eclipse.paho.client.mqttv3.MqttException
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import java.util.concurrent.Executors
 
@@ -48,6 +53,110 @@ class MyForegroundService : Service() {
 
 
 	}
+	private lateinit var mqttClient: MqttAndroidClient;
+
+	fun startBlackScreen() {
+		val intent = Intent(this@MyForegroundService, BlankBlockingActivity::class.java)
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+		startActivity(intent)
+	}
+
+	fun connect(context: Context) {
+		val CHANNEL_ID = "MyForegroundServiceChannel"
+		val username = "tvlauncher"
+		val password = "GXlr9Z5OAw5Q11rwicahH89B9R35aw8A"
+		val uri = "tcp://192.168.1.25:1883"
+		val topic = "ha/tvbox"
+		val clientId = "mqtt-explorer-ffc1707f"
+		mqttClient = MqttAndroidClient(context, uri, clientId).apply {
+			// create forground notification
+			val foregroundNotification = NotificationCompat.Builder(context, CHANNEL_ID)
+				.setContentTitle("My Foreground Service")
+				.setContentText("My Foreground Service is running")
+				.setSmallIcon(R.drawable.ic_dialog_email)
+				.build()
+
+			setForegroundService(foregroundNotification)
+		}
+
+		mqttClient.setCallback(object : MqttCallbackExtended {
+			override fun connectComplete(reconnect: Boolean, serverURI: String?) {
+				Log.d(MyForegroundService.TAG, "connectComplete " + reconnect)
+
+				if (!reconnect) {
+					// Because Clean Session is true, we need to re-subscribe
+					subscribeToTopic(topic)
+				} else {
+					mqttClient.publish(topic, MqttMessage("tvbox online".toByteArray()))
+					// Successfully connected to MQTT broker
+				}
+			}
+
+			override fun connectionLost(cause: Throwable?) {
+				Log.d(MyForegroundService.TAG, "connectionLost")
+			}
+
+			@Throws(Exception::class)
+			override fun messageArrived(topic: String, message: MqttMessage) {
+				val msg = message.toString()
+
+				if (msg == "black") {
+					startBlackScreen()
+				}
+				Log.d(MyForegroundService.TAG, "messageArrived: $topic - ${msg}")
+			}
+
+			override fun deliveryComplete(token: IMqttDeliveryToken) {
+				Log.d(MyForegroundService.TAG, "deliveryComplete")
+			}
+		})
+
+
+		val mqttConnectOptions = MqttConnectOptions()
+		mqttConnectOptions.isAutomaticReconnect = true
+		mqttConnectOptions.isCleanSession = false
+		mqttConnectOptions.userName = username
+		mqttConnectOptions.password = password.toCharArray()
+
+		try {
+			mqttClient.connect(mqttConnectOptions, null, object : IMqttActionListener {
+				override fun onSuccess(asyncActionToken: IMqttToken) {
+					// Successfully connected to MQTT broker
+					Log.d(MyForegroundService.TAG, "onSuccess")
+				}
+
+				override fun onFailure(asyncActionToken: IMqttToken, exception: Throwable) {
+					// Failed to connect to MQTT broker
+					Log.d(MyForegroundService.TAG, "onFailure")
+				}
+			})
+		} catch (ex: MqttException) {
+			ex.printStackTrace()
+		}
+
+
+	}
+
+	fun subscribeToTopic(topic: String) {
+		val qos = 1
+
+		try {
+			mqttClient.subscribe(topic, qos, null, object : IMqttActionListener {
+				override fun onSuccess(asyncActionToken: IMqttToken) {
+					// Successfully subscribed to topic
+					Log.d(MyForegroundService.TAG, "Successfully subscribed to topic ${topic}")
+				}
+
+				override fun onFailure(asyncActionToken: IMqttToken, exception: Throwable) {
+					// Failed to subscribe to topic
+					Log.d(MyForegroundService.TAG, "Failed to subscribe to topic ${topic}")
+				}
+			})
+		} catch (ex: MqttException) {
+			ex.printStackTrace()
+		}
+	}
+
 
 	override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 //		val input = intent?.getStringExtra("inputExtra")
@@ -66,15 +175,17 @@ class MyForegroundService : Service() {
 //			.build()
 //
 //		startForeground(1, notification)
-		val executor = Executors.newSingleThreadExecutor()
-		executor.execute {
-			while (true) {
-				Thread.sleep(5000)
-				val intent = Intent(this@MyForegroundService, BlankBlockingActivity::class.java)
-				intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-				startActivity(intent)
-			}
-		}
+
+
+//		val executor = Executors.newSingleThreadExecutor()
+//		executor.execute {
+//			while (true) {
+//				Thread.sleep(5000)
+//				startBlackScreen()
+//			}
+//		}
+
+		connect(this)
 
 
 		return START_NOT_STICKY
