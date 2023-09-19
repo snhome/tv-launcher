@@ -1,26 +1,30 @@
 package nl.ndat.tvlauncher
 
 import android.R
-import android.app.Notification
+import android.annotation.SuppressLint
+import android.app.ActivityManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.WindowManager
 import androidx.core.app.NotificationCompat
 import info.mqtt.android.service.MqttAndroidClient
 import org.eclipse.paho.client.mqttv3.IMqttActionListener
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.IMqttToken
-import org.eclipse.paho.client.mqttv3.MqttCallback
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttException
 import org.eclipse.paho.client.mqttv3.MqttMessage
-import java.util.concurrent.Executors
+
 
 class MyForegroundService : Service() {
 	private val CHANNEL_ID = "MyForegroundServiceChannel"
@@ -49,16 +53,19 @@ class MyForegroundService : Service() {
 			startForeground(1, notification)
 		}
 
-
-
-
 	}
 	private lateinit var mqttClient: MqttAndroidClient;
 
 	fun startBlackScreen() {
+		Log.d("MyService", "startBlackScreen()")
+		// start on top of all activities
 		val intent = Intent(this@MyForegroundService, BlankBlockingActivity::class.java)
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 		startActivity(intent)
+	}
+
+	fun noYoutu() {
+		startBlackScreen()
 	}
 
 	fun connect(context: Context) {
@@ -101,7 +108,7 @@ class MyForegroundService : Service() {
 				val msg = message.toString()
 
 				if (msg == "black") {
-					startBlackScreen()
+					noYoutu()
 				}
 				Log.d(MyForegroundService.TAG, "messageArrived: $topic - ${msg}")
 			}
